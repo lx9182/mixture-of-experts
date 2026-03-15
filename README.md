@@ -40,8 +40,6 @@ class Expert(nn.Module):
 
 ## 2. Top-K Router with Auxiliary-Loss-Free Load Balancing
 
-![Formulas](MoE-Formula.png)
-
 ### Affinity Score
 
 Sigmoid dot-product between each token and each expert centroid:
