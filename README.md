@@ -22,7 +22,7 @@ Their outputs are summed to produce the output hidden state $\mathbf{h}'_t$.
 
 Each expert (shared or routed) is a Feed-Forward Network with SiLU-gated linear units:
 
-$$\text{FFN}(\mathbf{x}) = W_{\text{down}} \left( \text{SiLU}(W_{\text{gate}}\,\mathbf{x}) \odot W_{\text{up}}\,\mathbf{x} \right)$$
+$$\text{FFN}(\mathbf{x}) = W_{\text{down}} \left( \text{SiLU}(W_{\text{gate}}\mathbf{x}) \odot W_{\text{up}}\mathbf{x} \right)$$
 
 ```python
 class Expert(nn.Module):
@@ -50,7 +50,12 @@ $$s_{i,t} = \text{Sigmoid}(\mathbf{u}_t^\top \mathbf{e}_i)$$
 
 Select the $K_r$ experts with the highest (biased) affinity per token:
 
-$$g'_{i,t} = \begin{cases} s_{i,t}, & s_{i,t} + b_i \in \text{Topk}(\{s_{j,t} + b_j \mid 1 \leqslant j \leqslant N_r\},\, K_r) \\ 0, & \text{otherwise} \end{cases}$$
+$$
+g'_{i,t} = \begin{cases} 
+s_{i,t}, & s_{i,t} + b_i \in \text{TopK}\left(\{s_{j,t} + b_j \mid 1 \le j \le N_r\}, K_r\right) \\ 
+0, & \text{otherwise} 
+\end{cases}
+$$
 
 The bias term $b_i$ is used **only for routing** — the gating value always uses the original $s_{i,t}$.
 
@@ -92,7 +97,7 @@ class TopKRouter(nn.Module):
 
 Residual connection + always-on shared experts + sparsely-gated routed experts:
 
-$$\mathbf{h}'_t = \mathbf{u}_t + \sum_{i=1}^{N_s} \text{FFN}_i^{(s)}(\mathbf{u}_t) + \sum_{i=1}^{N_r} g_{i,t}\, \text{FFN}_i^{(r)}(\mathbf{u}_t)$$
+$$\mathbf{h}'_t = \mathbf{u}_t + \sum_{i=1}^{N_s} \text{FFN}_i^{(s)}(\mathbf{u}_t) + \sum_{i=1}^{N_r} g_{i,t} \text{FFN}_i^{(r)}(\mathbf{u}_t)$$
 
 ```python
 # Shared experts — always active
@@ -121,7 +126,7 @@ Penalizes over-reliance on any single expert **within a sequence**. Works alongs
 
 Fraction of tokens in the sequence that selected expert $i$ (normalized so perfect balance = 1.0):
 
-$$f_i = \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbb{1}\!\left(s_{i,t} \in \text{Topk}(\{s_{j,t}\},\, K_r)\right)$$
+$$f_i = \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbb{1}\!\left(s_{i,t} \in \text{Topk}(\{s_{j,t}\}, K_r)\right)$$
 
 ### Expert Score Mass $P_i$
 
@@ -131,7 +136,7 @@ $$s'_{i,t} = \frac{s_{i,t}}{\sum_{j=1}^{N_r} s_{j,t}}, \qquad P_i = \frac{1}{T} 
 
 ### Balance Loss
 
-$$\mathcal{L}_{\text{Bal}} = \alpha \sum_{i=1}^{N_r} f_i\, P_i$$
+$$\mathcal{L}_{\text{Bal}} = \alpha \sum_{i=1}^{N_r} f_i P_i$$
 
 $f_i$ acts as a **scaling factor** on the gradient — overused experts receive a larger gradient, pushing `centroids.weight` to reduce their affinity.
 
