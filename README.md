@@ -126,7 +126,7 @@ Penalizes over-reliance on any single expert **within a sequence**. Works alongs
 
 Fraction of tokens in the sequence that selected expert $i$ (normalized so perfect balance = 1.0):
 
-$$f_i = \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbb{1}\!\left(s_{i,t} \in \text{Topk}(\{s_{j,t}\}, K_r)\right)$$
+$$f_i = \frac{N_r}{K_r T} \sum_{t=1}^{T} \mathbb{1}\left(s_{i,t} \in \text{Topk}(\{s_{j,t}\}, K_r)\right)$$
 
 ### Expert Score Mass $P_i$
 
